@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -29,7 +28,7 @@ func lastOperatorExistsAndIsnotParen(operatorStack []string) bool{
 
 // https://en.wikipedia.org/wiki/Shunting_yard_algorithm#The_algorithm_in_detail
 
-func convertToRPN(tokens []string) ([]string, error ){
+func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 	result := make([]string, 0, len(tokens))
 	operatorStack := make([]string, 0, len(tokens))
 	for _, token := range(tokens){
@@ -41,10 +40,8 @@ func convertToRPN(tokens []string) ([]string, error ){
 			err := fmt.Errorf("Invalid token: %s", token)
 			return []string{}, err
 		}
-		_, strconverr := strconv.ParseFloat(token, 64)
-		if strconverr == nil {
+		if representsNumber(token, cache){
 			result = append(result, token)
-			continue
 		}
 		if token == "("{
 			operatorStack = append(operatorStack, token)
