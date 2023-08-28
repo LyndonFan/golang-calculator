@@ -41,7 +41,8 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 			return []string{}, err
 		}
 		if representsNumber(token, cache){
-			result = append(result, token)
+			result = append(result, strings.ToLower(token))
+			continue
 		}
 		if token == "("{
 			operatorStack = append(operatorStack, token)
@@ -71,7 +72,7 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 			operatorStack = append(operatorStack, token)
 		}
 	}
-	for len(operatorStack) > 0{
+	for len(operatorStack) > 0 {
 		op := operatorStack[len(operatorStack)-1]
 		if op == "("{
 			return []string{}, fmt.Errorf("Unmatched (")
