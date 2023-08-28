@@ -5,8 +5,9 @@ import (
 )
 
 func CreateTokenizeTest(input string, expectedTokens []string) func(*testing.T) {
+	cache := NewCache()
 	return func(t *testing.T) {
-		tokens, err := tokenize(input)
+		tokens, err := tokenize(input, cache)
 		if err != nil {
 			t.Errorf("Error: %s", err)
 		}
@@ -22,8 +23,9 @@ func CreateTokenizeTest(input string, expectedTokens []string) func(*testing.T) 
 }
 
 func CreateTokenizeTestExpectError(input string, expectedError error) func(*testing.T) {
+	cache := NewCache()
 	return func(t *testing.T) {
-		tokens, err := tokenize(input)
+		tokens, err := tokenize(input, cache)
 		if err == nil {
 			t.Errorf("Did not get error, but got tokens %s", tokens)
 		}
