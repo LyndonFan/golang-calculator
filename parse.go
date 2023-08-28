@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -31,7 +30,6 @@ func lastOperatorExistsAndIsnotParen(operatorStack []string) bool{
 // https://en.wikipedia.org/wiki/Shunting_yard_algorithm#The_algorithm_in_detail
 
 func convertToRPN(tokens []string) ([]string, error ){
-	log.Println(tokens)
 	result := make([]string, 0, len(tokens))
 	operatorStack := make([]string, 0, len(tokens))
 	for _, token := range(tokens){

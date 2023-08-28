@@ -23,15 +23,17 @@ func getHelp() error {
 }
 
 func calculate(input string) (float64, error){
+	log.Printf("input:  \"%s\"", input)
 	tokens, err := tokenize(input)
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("tokens: %s", tokens)
 	rpn, err := convertToRPN(tokens)
 	if err != nil {
 		return 0, err
 	}
-	log.Println(rpn)
+	log.Printf("rpn:    %s", rpn)
 	return evaluateRPN(rpn)
 }
 

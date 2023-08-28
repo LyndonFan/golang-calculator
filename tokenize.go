@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -27,7 +26,6 @@ func isOperator(s string) bool{
 
 func tokenize(s string) ([]string, error) {
 	s = strings.ReplaceAll(s, " ", "")
-	log.Println(fmt.Sprintf("tokenize: \"%s\"", s))
 	tokens := make([]string, 0, len(s))
 	currToken := make([]byte, 0, len(s))
 	for _, b := range([]byte(s)){

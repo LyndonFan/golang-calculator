@@ -7,6 +7,9 @@ import (
 )
 
 func evaluateRPN(tokens []string) (float64, error) {
+	if len(tokens) == 0 {
+		return 0, fmt.Errorf("Empty stack")
+	}
 	stack := make([]float64, 0)
 	for _, token := range tokens {
 		switch token {
