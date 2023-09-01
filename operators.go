@@ -92,7 +92,7 @@ func getBinaryOperations() map[string]Operator{
 
 func saveLn (x float64) (float64, error) {
 	if x <= 0 {
-		return 0, fmt.Errorf("Invalid number: %f", x)
+		return 0, fmt.Errorf("Invalid number for natural log: %f", x)
 	}
 	return math.Log(x), nil
 }
