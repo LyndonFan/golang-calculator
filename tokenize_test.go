@@ -1,8 +1,32 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
+
+func TestIsDigit(t *testing.T) {
+    testCases := []struct {
+        input byte
+        expected bool
+    }{
+        {byte('0'), true},
+        {byte('5'), true},
+        {byte('9'), true},
+        {byte('a'), false},
+        {byte('A'), false},
+        {byte(' '), false},
+        {byte('+'), false},
+        {byte('-'), false},
+    }
+
+    for _, tc := range testCases {
+        result := isDigit(tc.input)
+        if result != tc.expected {
+            t.Errorf("Expected isDigit(%c) to be %v, but got %v", tc.input, tc.expected, result)
+        }
+    }
+}
 
 func CreateTokenizeTest(input string, expectedTokens []string) func(*testing.T) {
 	cache := NewCache()
@@ -11,13 +35,8 @@ func CreateTokenizeTest(input string, expectedTokens []string) func(*testing.T) 
 		if err != nil {
 			t.Errorf("Error: %s", err)
 		}
-		if len(tokens) != len(expectedTokens) {
-			t.Errorf("Expected %d tokens, got %s", len(expectedTokens), tokens)
-		}
-		for i, token := range tokens {
-			if token != expectedTokens[i] {
-				t.Errorf("Expected token %d to be %s, got %s", i, expectedTokens[i], token)
-			}
+		if !reflect.DeepEqual(tokens, expectedTokens) {
+			t.Errorf("Expected tokens %v, but got %v", expectedTokens, tokens)
 		}
 	}
 }
