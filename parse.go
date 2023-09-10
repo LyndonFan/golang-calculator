@@ -31,7 +31,8 @@ func lastOperatorExistsAndIsnotParen(operatorStack []string) bool{
 func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 	result := make([]string, 0, len(tokens))
 	operatorStack := make([]string, 0, len(tokens))
-	for _, token := range(tokens){
+	lastWasOperator := false
+	for i, token := range(tokens){
 		if strings.Count(token, ".") > 1 {
 			err := fmt.Errorf("Invalid token with more than 1 decimal point: %s", token)
 			return []string{}, err
@@ -41,12 +42,19 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 			return []string{}, err
 		}
 		if representsNumber(token, cache){
+			if !lastWasOperator && i>0 {
+				err := fmt.Errorf("Consecutive numbers found: %s then %s", tokens[i-1], token)
+				return []string{}, err
+			}
 			result = append(result, strings.ToLower(token))
+			lastWasOperator = false
 			continue
 		}
 		if token == "("{
 			operatorStack = append(operatorStack, token)
+			lastWasOperator = true
 		} else if token == ")" {
+			lastWasOperator = true
 			for lastOperatorExistsAndIsnotParen(operatorStack){
 				result = append(result, operatorStack[len(operatorStack)-1])
 				operatorStack = operatorStack[:len(operatorStack)-1]
@@ -55,7 +63,11 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 				return []string{}, fmt.Errorf("Unmatched )")
 			}
 			operatorStack = operatorStack[:len(operatorStack)-1]
+		} else if !isOperator(token) {
+			err := fmt.Errorf("Invalid token: %s", token)
+			return []string{}, err
 		} else {
+			lastWasOperator = true
 			for lastOperatorExistsAndIsnotParen(operatorStack){
 				lastOperator := operatorStack[len(operatorStack)-1]
 				lastLevel := getPrecendenceLevel(lastOperator)
