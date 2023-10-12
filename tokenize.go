@@ -2,30 +2,18 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
-func isDigit(b byte) bool{
-	// 48 = byte('0'), 57 = byte('9')
-	return 48<=b && b<=57
-}
-
-func isOperator(s string) bool{
-	operators := map[string]bool{
-		"+": true,
-		"-": true,
-		"*": true,
-		"/": true,
-		"^": true,
-		"%": true,
-		"(": true,
-		")": true,
-	}
-	return operators[s]
+func isDigit(b byte) bool {
+	return byte('0') <= b && b <= byte('9')
 }
 
 func getVariableName(tokens []string) (string, []string, error) {
-	if len(tokens) < 2 || tokens[1] != "=" {return "", tokens, nil}
+	if len(tokens) < 2 || tokens[1] != "=" {
+		return "", tokens, nil
+	}
 	variableName := tokens[0]
 	err := CheckValidCacheKey(variableName)
 	if err != nil {
@@ -33,23 +21,45 @@ func getVariableName(tokens []string) (string, []string, error) {
 	}
 	return variableName, tokens[2:], nil
 }
+func genIsOperator(operations map[string]Operator) func(byte) bool {
+	singleSymbolOperators := make(map[string]bool, len(operations))
+	for s := range operations {
+		if len(s) == 1 {
+			singleSymbolOperators[s] = true
+		}
+	}
+	for _, b := range []byte("(),=") {
+		singleSymbolOperators[string(b)] = true
+	}
+	return func(s byte) bool {
+		_, exists := singleSymbolOperators[string(s)]
+		return exists
+	}
+}
 
 func tokenize(s string, cache *Cache) ([]string, error) {
+	operations := getOperations()
+	isOperator := genIsOperator(operations)
+	fmt.Printf("isOperator('^') = %t\n", isOperator('^'))
+
 	s = strings.ReplaceAll(s, " ", "")
 	tokens := make([]string, 0, len(s))
 	currToken := make([]byte, 0, len(s))
-	for _, b := range([]byte(s)){
+	for _, b := range []byte(s) {
 		if isDigit(b) || b == '.' {
+			// extend number
+			log.Printf("extending number with %c\n", b)
 			if len(currToken) > 0 {
-				shouldExtend := isDigit(currToken[len(currToken)-1])
-				shouldExtend = shouldExtend || currToken[len(currToken)-1] == '.'
-				if currToken[len(currToken)-1] == '-' {
+				lastSymbol := currToken[len(currToken)-1]
+				shouldExtend := isDigit(lastSymbol) || lastSymbol == '.'
+				if lastSymbol == '-' {
 					shouldExtend = true
 					if len(tokens) > 0 {
 						prevToken := tokens[len(tokens)-1]
 						shouldExtend = !representsNumber(prevToken, cache)
 					}
 				}
+				log.Printf("shouldExtend = %t\n", shouldExtend)
 				if !shouldExtend {
 					tokens = append(tokens, string(currToken))
 					currToken = currToken[:0]
@@ -57,6 +67,8 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 			}
 			currToken = append(currToken, b)
 		} else if isAlpha(string(b)) {
+			// extend alpha
+			log.Printf("extending alpha with %c\n", b)
 			if len(currToken) > 0 {
 				shouldExtend := isAlpha(string(currToken))
 				if !shouldExtend {
@@ -65,22 +77,27 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 				}
 			}
 			currToken = append(currToken, b)
-		} else if !isOperator(string(b)) && b != '=' {
+		} else if !isOperator(b) && b != '=' {
 			err := fmt.Errorf("invalid token: %c", b)
-			return nil, err	
+			return nil, err
 		} else if b == '-' {
+			// handle minus sign
+			log.Printf("handling minus sign with %c\n", b)
 			if len(currToken) > 0 {
 				tokens = append(tokens, string(currToken))
 				currToken = currToken[:0]
 			}
 			currToken = append(currToken, b)
-		} else { // other operators
+		} else {
+			// other operators
+			log.Printf("handling operator with %c\n", b)
 			if len(currToken) > 0 {
 				tokens = append(tokens, string(currToken))
 				currToken = currToken[:0]
 			}
-			tokens = append(tokens, string(b))
+			currToken = append(currToken, b)
 		}
+		log.Printf("currToken = %s, tokens = %s\n", currToken, tokens)
 	}
 	if len(currToken) > 0 {
 		tokens = append(tokens, string(currToken))

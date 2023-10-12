@@ -22,17 +22,19 @@ func isRightAssociative(token string) bool {
 	return token == "^"
 }
 
-func lastOperatorExistsAndIsnotParen(operatorStack []string) bool{
+func lastOperatorExistsAndIsnotParen(operatorStack []string) bool {
 	return len(operatorStack) > 0 && operatorStack[len(operatorStack)-1] != "("
 }
 
 // https://en.wikipedia.org/wiki/Shunting_yard_algorithm#The_algorithm_in_detail
 
-func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
+func convertToRPN(tokens []string, cache *Cache) ([]string, error) {
 	result := make([]string, 0, len(tokens))
+	operations := getOperations()
+	isOperator := genIsOperator(operations)
 	operatorStack := make([]string, 0, len(tokens))
 	lastWasOperator := false
-	for i, token := range(tokens){
+	for i, token := range tokens {
 		if strings.Count(token, ".") > 1 {
 			err := fmt.Errorf("Invalid token with more than 1 decimal point: %s", token)
 			return []string{}, err
@@ -41,8 +43,8 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 			err := fmt.Errorf("Invalid token: %s", token)
 			return []string{}, err
 		}
-		if representsNumber(token, cache){
-			if !lastWasOperator && i>0 {
+		if representsNumber(token, cache) {
+			if !lastWasOperator && i > 0 {
 				err := fmt.Errorf("Consecutive numbers found: %s then %s", tokens[i-1], token)
 				return []string{}, err
 			}
@@ -50,32 +52,37 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 			lastWasOperator = false
 			continue
 		}
-		if token == "("{
+		op, exists := operations[token]
+		if exists && !op.IsInfix {
+			operatorStack = append(operatorStack, token)
+			continue
+		}
+		if token == "(" {
 			operatorStack = append(operatorStack, token)
 			lastWasOperator = true
 		} else if token == ")" {
 			lastWasOperator = true
-			for lastOperatorExistsAndIsnotParen(operatorStack){
+			for lastOperatorExistsAndIsnotParen(operatorStack) {
 				result = append(result, operatorStack[len(operatorStack)-1])
 				operatorStack = operatorStack[:len(operatorStack)-1]
 			}
-			if len(operatorStack) == 0{
+			if len(operatorStack) == 0 {
 				return []string{}, fmt.Errorf("Unmatched )")
 			}
 			operatorStack = operatorStack[:len(operatorStack)-1]
-		} else if !isOperator(token) {
+		} else if !isOperator(token[0]) {
 			err := fmt.Errorf("Invalid token: %s", token)
 			return []string{}, err
 		} else {
 			lastWasOperator = true
-			for lastOperatorExistsAndIsnotParen(operatorStack){
+			for lastOperatorExistsAndIsnotParen(operatorStack) {
 				lastOperator := operatorStack[len(operatorStack)-1]
 				lastLevel := getPrecendenceLevel(lastOperator)
 				currentLevel := getPrecendenceLevel(token)
-				if lastLevel < currentLevel{
+				if lastLevel < currentLevel {
 					break
 				}
-				if lastLevel == currentLevel && isRightAssociative(token){
+				if lastLevel == currentLevel && isRightAssociative(token) {
 					break
 				}
 				result = append(result, operatorStack[len(operatorStack)-1])
@@ -86,7 +93,7 @@ func convertToRPN(tokens []string, cache *Cache) ([]string, error ){
 	}
 	for len(operatorStack) > 0 {
 		op := operatorStack[len(operatorStack)-1]
-		if op == "("{
+		if op == "(" {
 			return []string{}, fmt.Errorf("Unmatched (")
 		}
 		result = append(result, op)
