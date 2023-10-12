@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -18,6 +17,11 @@ func getVariableName(tokens []string) (string, []string, error) {
 	err := CheckValidCacheKey(variableName)
 	if err != nil {
 		return "", []string{}, err
+	}
+	operations := getOperations()
+	_, exists := operations[variableName]
+	if exists {
+		return "", []string{}, fmt.Errorf("Variable name %s already exists", variableName)
 	}
 	return variableName, tokens[2:], nil
 }
@@ -48,7 +52,7 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 	for _, b := range []byte(s) {
 		if isDigit(b) || b == '.' {
 			// extend number
-			log.Printf("extending number with %c\n", b)
+			// log.Printf("extending number with %c\n", b)
 			if len(currToken) > 0 {
 				lastSymbol := currToken[len(currToken)-1]
 				shouldExtend := isDigit(lastSymbol) || lastSymbol == '.'
@@ -59,7 +63,7 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 						shouldExtend = !representsNumber(prevToken, cache)
 					}
 				}
-				log.Printf("shouldExtend = %t\n", shouldExtend)
+				// log.Printf("shouldExtend = %t\n", shouldExtend)
 				if !shouldExtend {
 					tokens = append(tokens, string(currToken))
 					currToken = currToken[:0]
@@ -68,7 +72,7 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 			currToken = append(currToken, b)
 		} else if isAlpha(string(b)) {
 			// extend alpha
-			log.Printf("extending alpha with %c\n", b)
+			// log.Printf("extending alpha with %c\n", b)
 			if len(currToken) > 0 {
 				shouldExtend := isAlpha(string(currToken))
 				if !shouldExtend {
@@ -82,7 +86,7 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 			return nil, err
 		} else if b == '-' {
 			// handle minus sign
-			log.Printf("handling minus sign with %c\n", b)
+			// log.Printf("handling minus sign with %c\n", b)
 			if len(currToken) > 0 {
 				tokens = append(tokens, string(currToken))
 				currToken = currToken[:0]
@@ -90,14 +94,14 @@ func tokenize(s string, cache *Cache) ([]string, error) {
 			currToken = append(currToken, b)
 		} else {
 			// other operators
-			log.Printf("handling operator with %c\n", b)
+			// log.Printf("handling operator with %c\n", b)
 			if len(currToken) > 0 {
 				tokens = append(tokens, string(currToken))
 				currToken = currToken[:0]
 			}
 			currToken = append(currToken, b)
 		}
-		log.Printf("currToken = %s, tokens = %s\n", currToken, tokens)
+		// log.Printf("currToken = %s, tokens = %s\n", currToken, tokens)
 	}
 	if len(currToken) > 0 {
 		tokens = append(tokens, string(currToken))
