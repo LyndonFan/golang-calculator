@@ -44,7 +44,6 @@ func genIsOperator(operations map[string]Operator) func(byte) bool {
 func tokenize(s string, cache *Cache) ([]string, error) {
 	operations := getOperations()
 	isOperator := genIsOperator(operations)
-	fmt.Printf("isOperator('^') = %t\n", isOperator('^'))
 
 	s = strings.ReplaceAll(s, " ", "")
 	tokens := make([]string, 0, len(s))
